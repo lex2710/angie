@@ -1,0 +1,18 @@
+//Установка docker на ubuntu
+# apt update
+# apt install docker.io -y
+// Скачиваем и запускаем контейнер, что бы скопировать себе основной конфиг для его редактирования и дальнейшего подключения к контейнерам
+# docker run --name angie -p 8080:80 -d docker.angie.software/angie:1.7.0-alpine
+// Создаем каталог и компируем конфигурацию из контейнера
+# mkdir /etc/angie_docker
+# docker cp angie:/etc/angie /etc/angie_docker/
+# docker rm -f angie
+// Запускаем веб сервер с необходимыми параметрами
+# docker run --name angie --restart always -v /etc/angie_docker/angie/:/etc/angie:ro -v /var/www/html:/usr/share/angie/html:ro -v /var/log/angie_docker:/var/log/angie -p 8080:80 -d docker.angie.software/angie
+// Создаем конфиг для 443 порта и запускаем контейнер
+# docker run --name angie_443 --restart always -v /etc/angie_docker/angie/:/etc/angie:ro -v /var/www/html:/usr/share/angie/html:ro -v /var/log/angie_docker:/var/log/angie -p 443:443 -d docker.angie.software/angie
+
+//Результат:
+CONTAINER ID   IMAGE                         COMMAND                  CREATED         STATUS         PORTS                                           NAMES
+f1c5c119b60d   docker.angie.software/angie   "angie -g 'daemon of…"   2 minutes ago   Up 2 minutes   80/tcp, 0.0.0.0:443->443/tcp, :::443->443/tcp   angie_443
+27f51cad41b9   docker.angie.software/angie   "angie -g 'daemon of…"   3 minutes ago   Up 3 minutes   0.0.0.0:8080->80/tcp, :::8080->80/tcp           angie
