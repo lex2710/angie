@@ -8,9 +8,9 @@
 # docker cp angie:/etc/angie /etc/angie_docker/
 # docker rm -f angie
 // Запускаем веб сервер с необходимыми параметрами
-# docker run --name angie --restart always -v /etc/angie_docker/angie/:/etc/angie:ro -v /var/www/html:/usr/share/angie/html:ro -v /var/log/angie_docker:/var/log/angie -p 8080:80 -d docker.angie.software/angie
+# docker run --name angie --restart always -v /etc/angie_docker/angie/:/etc/angie:ro -v /var/www/html:/usr/share/angie/html:ro -v /var/log/angie_docker:/var/log/angie -p 8080:80 -d docker.angie.software/angie:1.7.0-alpine
 // Создаем конфиг для 443 порта и запускаем контейнер
-# docker run --name angie_443 --restart always -v /etc/angie_docker/angie/:/etc/angie:ro -v /var/www/html:/usr/share/angie/html:ro -v /var/log/angie_docker:/var/log/angie -p 443:443 -d docker.angie.software/angie
+# docker run --name angie_443 --restart always -v /etc/angie_docker/angie/:/etc/angie:ro -v /var/www/html:/usr/share/angie/html:ro -v /var/log/angie_docker:/var/log/angie -p 443:443 -d docker.angie.software/angie:1.7.0-alpine
 
 //Результат:
 CONTAINER ID   IMAGE                         COMMAND                  CREATED         STATUS         PORTS                                           NAMES
