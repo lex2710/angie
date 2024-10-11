@@ -1,3 +1,16 @@
-$ grep -lr -e 'nginx' . | xargs sed -i 's/nginx/angie/g'
-$ grep -lr -e 'www-data' . | xargs sed -i 's/www-data/angie/g'
-$ mv nginx.conf angie.conf
+// Просмотр установленных модулей в nginx
+# nginx -T
+// Сравнить установленные модули в Angie, если есть недостающие установить. В нашем примере конфигурации используется модуль brotli
+# apt install angie-module-brotli
+// Прописать данный модуль в конфиг angie.conf
+// Скопировать необходимые файлы конфигурации из /etc/nginx в /etc/angie
+// Скопировать основной конфиг /etc/nginx/nginx.conf в /etc/angie/angie.conf
+// Выполнить замену всех путей относящихся к nginx на angie во всех конфигурационных файлах в каталоге /etc/angie/
+# cd /etc/angie/ && grep -lr -e 'nginx' . | xargs sed -i 's/nginx/angie/g'
+// Если требуется, заменить пользователя в angie.conf на www-data
+// Скорректировать линки в каталоге /etc/angie/sites-enabled на файлы из каталога /etc/angie/sites-available.
+// Проверить конфигурацию 
+# angie -t
+// В случае успешной проверки, можно переключаться на angie
+# systemctl stop nginx.service && systemctl restart angie.service
+# systemctl desable nginx.service && systemctl mask nginx.service
