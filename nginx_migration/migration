@@ -1,0 +1,3 @@
+$ grep -lr -e 'nginx' . | xargs sed -i 's/nginx/angie/g'
+$ grep -lr -e 'www-data' . | xargs sed -i 's/www-data/angie/g'
+$ mv nginx.conf angie.conf
