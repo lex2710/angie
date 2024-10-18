@@ -1,0 +1,42 @@
+http {
+  ...
+  # Block bot
+  map $http_user_agent $block_bot {
+    "Go-http-client.*" "yes";
+    "python.*" "yes";
+    default "no";
+  }
+  ...
+}
+
+server {
+  ...
+  # Перенаправление с www на без www
+  if ($host ~ "^www\.(.*)$") {
+    return 301 $scheme://$1$request_uri;
+  }
+
+  # При любом запросе, начинающемся с "error..." отдаем 444 код
+  location ~*/error.* {
+    return 444 'No response';
+  }
+
+  # Для основных запросов, запрещаем ботов
+  location /
+           /assets
+           /images
+           /error {
+              if ($block_bot = "yes") {return 403;}
+  }
+
+  # Перенаправляем запрос "hello" на index.html
+  location /hello {
+    rewrite ^/hello$ /index.html;
+  }
+
+  # Для картинок добавляем заголовок Cache_control
+  location ~*\.(jpg|jpeg|png|gif)$ {
+    add_header Cache_control "public, max-age=3600";
+  }
+  ...
+}
