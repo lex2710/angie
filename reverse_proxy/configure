@@ -1,0 +1,104 @@
+######################## maps ###########################
+
+# map для доступа к сайту
+map "$geoip2_data_country_code:$remote_addr" $allowed_reg {
+        default no;
+         :192.168.1.1 "yes"; # доступ из внутренней сети внутренняя сеть
+        ~^NL:176.222.55.109 "yes";# доступ для сервера мониторинга, расположенного в Нидерландах
+        ~^RU: "yes"; # доступ для Россия
+}
+
+# Block http-bot
+map $http_user_agent $block_bot {
+        "Go-http-client/1.1" "yes";
+        default "no";
+}
+
+
+######################### upstreams #########################
+
+upstream cloud {
+        zone upstream_cloud 1024k;
+        server 192.168.1.35:80;
+}
+
+upstream office {
+        zone upstream_office 1024k;
+        server 192.168.1.38:9980;
+}
+
+
+########################## locations ##############################
+
+location / {
+        if ($allowed_reg = no) {return 403;}
+        if ($block_bot = yes) {return 403;}
+        add_header Strict-Transport-Security "max-age=15552000; includeSubDomains" always;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_pass http://cloud;
+}
+
+
+location ~ \.php$ {
+		# fastcgi_param  SCRIPT_FILENAME    $document_root$fastcgi_script_name;
+		include fastcgi.conf;
+		fastcgi_intercept_errors on;
+		fastcgi_pass 192.168.1.35:9000;
+		fastcgi_index index.php;
+}
+
+
+# static files
+location ^~ /browser {
+        if ($allowed_reg = no) {return 403;}
+        proxy_pass https://office;
+        proxy_set_header Host $http_host;
+}
+
+
+# WOPI discovery URL
+location ^~ /hosting/discovery {
+    	if ($allowed_reg = no) {return 403;}
+        proxy_pass https://office;
+        proxy_set_header Host $http_host;
+}
+
+
+# Capabilities
+location ^~ /hosting/capabilities {
+        if ($allowed_reg = no) {return 403;}
+        proxy_pass https://office;
+        proxy_set_header Host $http_host;
+}
+
+
+# main websocket
+location ~ ^/cool/(.*)/ws$ {
+        if ($allowed_reg = no) {return 403;}
+        proxy_pass https://office;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $http_host;
+        proxy_read_timeout 36000s;
+}
+
+
+# download, presentation and image upload
+location ~ ^/(c|l)ool {
+        if ($allowed_reg = no) {return 403;}
+        proxy_pass https://office;
+        proxy_set_header Host $http_host;
+}
+
+
+# Admin Console websocket
+location ^~ /(c|l)ool/adminws {
+        if ($allowed_reg = no) {return 403;}
+        proxy_pass https://office;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $http_host;
+        proxy_read_timeout 36000s;
+}
