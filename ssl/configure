@@ -1,0 +1,42 @@
+#Для автоматического получения сертификатов используем встроенный ACME модуль в Angie
+#angie.conf
+resolver 127.0.0.53 ipv6=off;
+acme_client rsa https://acme-v02.api.letsencrypt.org/directory key_type=rsa;
+acme_client ecdsa https://acme-v02.api.letsencrypt.org/directory;
+
+#в блоке server
+acme rsa;
+acme ecdsa;
+ssl_certificate $acme_cert_rsa;
+ssl_certificate_key $acme_cert_key_rsa;
+ssl_certificate $acme_cert_ecdsa;
+ssl_certificate_key $acme_cert_key_ecdsa;
+include         /etc/angie/ssl_params;
+
+#/etc/angie/ssl_params
+http2 on;
+ssl_protocols TLSv1.2 TLSv1.3;
+ssl_dhparam /etc/angie/dhparam.pem;
+ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305;
+ssl_prefer_server_ciphers off;
+ssl_session_cache shared:SSL:10m;
+ssl_session_timeout 28h;
+add_header Strict-Transport-Security max-age=31536000; # добавляем заголовок HSTS
+
+#Для включения http3 в блоке server требуется прописать дополнительно
+listen 443 quic reuseport;
+http3 on;
+add_header Alt-Svc 'h3=":443"; ma=86400';
+quic_gso on;
+quic_bpf on;
+quic_retry off;
+http3_max_concurrent_streams 128;
+
+#Для перенаправления с http на https требуется создать отдельную директиву server со следующим содержимым
+server {
+        listen 80;
+        server_name a-serov.ru;
+        return 301 https://$host$request_uri;
+}
+
+#Проведен тест SSL, результат по ссылке https://www.ssllabs.com/ssltest/analyze.html?d=a-serov.ru
