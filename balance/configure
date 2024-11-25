@@ -22,7 +22,7 @@
 # В данном случае при постоянном обращении с данным аргументом, балансировщик будет направлять на один и тот же upstream сервер, в случае недоступности сервера, запрос будет отправлен на другой. 
   upstream deb {
                 zone deb 1024k;
-                hash $arg_route[consistent];
+                hash $arg_route consistent;
                 server deb_white:8080;
                 server deb_gold:8080;
                 server deb_green:8080;
