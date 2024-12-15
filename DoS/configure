@@ -1,0 +1,42 @@
+# Для ограничения по частоте запросов создаем зону разделяемой памяти
+
+  limit_req_zone $binary_remote_addr zone=one:10m rate=5r/s;
+
+# В данном случае, разрешаем не больше 5 запросов в секунду. В Случае превышения, запросы будут попадать в "ведро" и обрабатываться с той же скоростью
+# Для этого в location прописываем:
+
+  limit_req zone=one burst=200;
+  limit_req_log_level error;
+
+# Для установки fail2ban выполняем apt install fail2ban
+# После установки конфиге /etc/fail2ban/jail.conf находим правило [nginx-limit-req] и прописываем
+
+  [nginx-limit-req]
+  port = http,https
+  enabled = true
+  filter = nginx-limit-req
+  action = iptables-multiport[name=ReqLimit, port="http,https",protocol=tcp]
+  logpath = /var/log/angie/*error.log
+  findtime = 900
+  bantime = 7200 #Время, на которое будет заблокирован ip
+  maxretry = 5 #Кол-во ошибок за время findtime
+
+# В параметре filter указывается конфиг файл который будет использоваться для проверки журнала error.log по шаблону для поиска сработавших ограничений
+
+# Для настройки Basic авторизации необходимо создать файл .httpasswd. Для создания этого файла и добвления пользователей используется утилита htpasswd, которую можно установить - apt install apache2-utils
+# для создания нового файла, необходимо использовать следующую команду с опцией "-c". Для добавления следующих пользователей опцию "-с" использовать не требуется
+
+  htpasswd -c /etc/angie/.htpasswd testuser1
+  htpasswd /etc/angie/.htpasswd testuser2
+
+# Утилита спросит пароль для создаваемого пользователя и запишет хэш в файл .htpasswd
+
+# В location требуется включить использование авторизации
+
+  satisfy any;
+  allow 192.168.1.0/24;
+  deny all;
+  auth_basic "Identify yourself!";
+  auth_basic_user_file /etc/angie/.htpasswd;
+
+# В данном примере директива "satisfy" с опцией "any" разрешает доступ либо ip из указанной подсети, в этом случае запрос авторизации выдаваться не будет. Для остальных ip адресов потребуется авторизация.
